@@ -26,8 +26,9 @@ import java.util.List;
 /**
  *
  * @author vinfrais
+ * @param <T>
  */
-public interface MicroObjectModel {
+public interface MicroObjectModel <T extends Number> {
     
     //arraylist of points, ordered, not limit on dimensionality
     
@@ -59,7 +60,8 @@ public interface MicroObjectModel {
     public int[] getPixelsX();
 
     public int[] getPixelsY();
-
+    
+    public int[] getPixelsZ();
 
     public float getCentroidX();
 

@@ -67,6 +67,7 @@ import javax.swing.SwingWorker;
 import vtea.exploration.listeners.AxesChangeListener;
 import vtea.exploration.listeners.PlotUpdateListener;
 import vtea.exploration.listeners.UpdatePlotWindowListener;
+import vtea.exploration.plottools.panels.DefaultPlotPanels;
 import vteaobjects.MicroObject;
 import vteaobjects.MicroObjectModel;
 
@@ -118,7 +119,6 @@ public class MicroExplorer extends javax.swing.JFrame implements RoiListener, Pl
 
     GatePercentages ResultsWindow;
     
-
     HashMap<Integer, JToggleButton> GateButtonsHM = new HashMap<Integer, JToggleButton>();
     HashMap<Integer, String> AvailableDataHM = new HashMap<Integer, String>();
 
@@ -144,16 +144,35 @@ public class MicroExplorer extends javax.swing.JFrame implements RoiListener, Pl
     }
 
     public void process(ImagePlus imp, String title, List plotvalues, ExplorationCenter ec, PlotAxesPanels pap, ArrayList AvailableData) {
-
+        //Needs to be converted to a Factory metaphor.
+        
+        //Setup base dataseta
+        //Available data is an arraylist of the available tags as they exist in microvolumes.
+        //imp is the original image
+        
         this.availabledata = AvailableData;
+        
+        
+        
+        this.imp = imp;
+        this.impoverlay = imp.duplicate();
+        this.impoverlay.addImageListener(this);
+        
+        this.impoverlay.setOpenAsHyperStack(true);
+        this.impoverlay.setDisplayMode(IJ.COMPOSITE);
+        this.impoverlay.setTitle(title);
+        
+        //Setup GUI and populate comboboxes
+        
         initComponents();
         addMenuItems();
         
+        
+        
+        
        this.title = title;
-       
 
        AxesSetup.setDescriptor(this.getTitle());
-       
 
         get3DProjection.setEnabled(false);
 
@@ -258,13 +277,7 @@ public class MicroExplorer extends javax.swing.JFrame implements RoiListener, Pl
             }
         });
 
-        this.imp = imp;
-        this.impoverlay = imp.duplicate();
-        this.impoverlay.addImageListener(this);
-        
-        this.impoverlay.setOpenAsHyperStack(true);
-        this.impoverlay.setDisplayMode(IJ.COMPOSITE);
-        this.impoverlay.setTitle(title);
+
 
         DefaultXYPanels = new XYPanels(AvailableData);
         DefaultXYPanels.addChangePlotAxesListener(this);
@@ -973,7 +986,8 @@ public class MicroExplorer extends javax.swing.JFrame implements RoiListener, Pl
         this.plotvalues = plotvalues;
         this.ec = ec;
         this.ec.addMakeImageOverlayListener(this);
-        this.pap = pap;
+        DefaultPlotPanels DPP = new DefaultPlotPanels();
+        this.pap = DPP;
         Main.removeAll();
         Main.add(ec.getPanel());
         updateBorderPanels(pap);

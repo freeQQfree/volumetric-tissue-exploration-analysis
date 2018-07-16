@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 SciJava
+ * Copyright (C) 2018 SciJava
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,38 +15,34 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package vtea.processor;
+package vtea.objects.measurements;
 
-import javax.swing.SwingWorker;
+import java.util.ArrayList;
+import java.util.ListIterator;
+import net.imglib2.RealPoint;
+import org.scijava.plugin.Plugin;
+import vtea.processor.Processor;
 
 /**
  *
  * @author sethwinfree
  */
-public abstract class AbstractProcessor extends SwingWorker<Void,Void> implements Processor  {
+@Plugin(type = Measurements.class)
+public class Mean extends AbstractMeasurement {
     
-    protected String VERSION = "0.0";
-    protected String AUTHOR = "VTEA Developer";
-    protected String COMMENT = "New functionality";
-    protected String NAME = "ABSTRACTPROCESSOR";
-    protected String KEY = "ABSTRACTPROCESSOR";
-    
-    protected String key;
-
-    
-     @Override
-    public String getName() {
-       return NAME;
-    }
+    protected String VERSION = "1.0";
+    protected String AUTHOR = "Seth Winfree";
+    protected String COMMENT = "Calculate mean";
+    protected String NAME = "Mean";
+    protected String KEY = "Mean";
 
     @Override
-    public String getKey() {
-        return KEY;
+    public Number process(ArrayList al, ArrayList values) {
+        Double n = 0.0;
+        ListIterator<Number> itr = values.listIterator();   
+    while(itr.hasNext()){
+        n = n + (Double)itr.next();
     }   
-    
-    public String getUIDKey() {
-        return key;
-    }
-
-    
+    return n/al.size();
+    }  
 }

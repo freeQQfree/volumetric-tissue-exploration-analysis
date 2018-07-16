@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 SciJava
+ * Copyright (C) 2018 SciJava
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -15,38 +15,32 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-package vtea.processor;
+package vtea.objects.measurements;
 
-import javax.swing.SwingWorker;
+import java.util.ArrayList;
+import java.util.ListIterator;
 
 /**
  *
  * @author sethwinfree
  */
-public abstract class AbstractProcessor extends SwingWorker<Void,Void> implements Processor  {
+public class Count extends AbstractMeasurement{
+    protected String VERSION = "1.0";
+    protected String AUTHOR = "Seth Winfree";
+    protected String COMMENT = "Calculate number of pixels";
+    protected String NAME = "Sum";
+    protected String KEY = "Sum";
     
-    protected String VERSION = "0.0";
-    protected String AUTHOR = "VTEA Developer";
-    protected String COMMENT = "New functionality";
-    protected String NAME = "ABSTRACTPROCESSOR";
-    protected String KEY = "ABSTRACTPROCESSOR";
-    
-    protected String key;
-
-    
-     @Override
-    public String getName() {
-       return NAME;
-    }
-
     @Override
-    public String getKey() {
-        return KEY;
-    }   
+    public Number process(ArrayList al, ArrayList values)  {
     
-    public String getUIDKey() {
-        return key;
-    }
-
+    Integer n = 0;
+    ListIterator<Number> itr = values.listIterator();   
+    while(itr.hasNext()){
+        n++;
+    }   
+    return n;
+};
+    
     
 }

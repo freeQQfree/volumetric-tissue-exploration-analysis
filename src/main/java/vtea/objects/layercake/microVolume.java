@@ -94,7 +94,7 @@ public class microVolume extends MicroObject implements MicroObjectModel, Clonea
      * Default constructor
      */
     public microVolume() {
-
+        super();
     }
 
     public void makeDerivedRegions(int[][] derivedRegionType, int channels, ImageStack[] Stacks, ArrayList ResultsPointers) {

@@ -22,8 +22,10 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.concurrent.ConcurrentHashMap;
 import vtea.objects.layercake.microVolume;
 
 
@@ -31,19 +33,31 @@ import vtea.objects.layercake.microVolume;
  *
  * @author vinfrais
  */
-public class MicroObject implements MicroObjectModel {
+public abstract class MicroObject implements MicroObjectModel {
+    
+    //base pixel positions
     
     int[] x;
     int[] y;
     int[] z;
     
+    //morphological associataions
+    
     int[][] derivedX;
     int[][] derivedY;
     int[][] derivedZ;
     
-    
+    ConcurrentHashMap<Integer, String> morphologicalLookup = new ConcurrentHashMap();
     
     //calculated variables
+    
+    //new way
+    
+    ArrayList<ArrayList<Number>> features = new ArrayList();  
+    ConcurrentHashMap<Integer, String> measurementLookup = new ConcurrentHashMap();
+    
+    //old way
+    
     private float mean = 0;
     private int nThreshold = 0;
     private float thresholdedmean = 0;
@@ -105,25 +119,12 @@ public class MicroObject implements MicroObjectModel {
     
     public MicroObject(){}
     
-
-
-    public MicroObject(ArrayList<int[]> pixels, int maskChannel, ImageStack[] is, int serialID){
-        
+    public MicroObject(ArrayList<int[]> pixels, int maskChannel, ImageStack[] is, int serialID){       
        this.serialID = serialID;
        xLimit = is[0].getWidth();
        yLimit = is[0].getHeight();
        zLimit = is[0].getSize();
-       
-       
-
        setPixels(pixels);
-       
-       
-       
-       calculateMeasurements(is, maskChannel);
-       //System.out.println("PROFILING: Object " + this.getSerialID() + " from channel " + maskChannel + " created of size: " + analysisMaskVolume[0] + " with mean intensities of: " + analysisMaskVolume[1]);
-       //System.out.println("PROFILING: " + analysisMaskVolume[0] + ", " + analysisMaskVolume[1]);
-       
     }
     
     @Override
@@ -145,7 +146,6 @@ public class MicroObject implements MicroObjectModel {
                     calculateDerivedObjectMeasurements(i, Stacks[i]);
                     break;
                 case microVolume.MASK:
-                    calculateMask(i, Stacks[i]);
                     calculateDerivedObjectMeasurements(i, Stacks[i]);
                     break;
                 case microVolume.FILL:
@@ -159,9 +159,6 @@ public class MicroObject implements MicroObjectModel {
    
    private void calculateGrow(int Channel, int amountGrow, ImageStack is){
        setMinMaxOffsetValues();
-       
-       
-       
    }
    
    
@@ -255,20 +252,9 @@ public class MicroObject implements MicroObjectModel {
         }
     } 
      
-    private void calculateMask(int Channel, ImageStack is) {
-//            ListIterator<microRegion> itr = alRegions.listIterator();
-//        int i = 0;        
-//        while(itr.hasNext()){           
-//            microRegion region = new microRegion();
-//            region = itr.next();
-//            DerivedRegions[Channel][i] = new microDerivedRegion(region.getPixelsX(), region.getPixelsY(), region.getPixelCount(), region.getZPosition(), microVolume.MASK, 0, region.getName());
-//            DerivedRegions[Channel][i].calculateMeasurements(is);          
-//            i++;
-//        }
-}
     
     private void setMinMaxOffsetValues(){
-        //System.out.println("PROFILING: Object ID# " + serialID + " created of size: " + x.length);
+       
         xMax = 0;
         xMin = xLimit;
         yMax = 0;
@@ -284,14 +270,6 @@ public class MicroObject implements MicroObjectModel {
             if(zMin > z[i]){zMin = z[i];}
             if(zMax < z[i]){zMax = z[i];}
         }
-        
-        //change offset dynamically-gui input
-        
-       // System.out.println("PROFILING: Object ID# " + serialID + " xMin: " + xMin + ", xMax: " + xMax);
-        
-       // System.out.println("PROFILING: Object ID# " + serialID + " yMin " + yMin + ", yMax: " + yMax);
-        
-       // System.out.println("PROFILING: Object ID# " + serialID + " zMin " + zMin + ", zMax: " + zMax);
         
         //Padding
         
@@ -365,18 +343,13 @@ public class MicroObject implements MicroObjectModel {
                 for(int j = 1; j < yMax-yMin+2*(padding); j++){
                     for(int k = 1; k < zMax-zMin+2*(padding); k++){
                         if(theBox[i][j][k] == r) {ringPixelCount[r]++;}
-                        //if(theBox[i][j][k] == 0) {objectPixelCount++;}
                     }
                 }
             }
             
         }
        //System.out.println("Object has " + objectPixelCount + " pixels");
-        for (int i = 0; i < ring; i++){
-           System.out.println("Ring #" + i + " has " + ringPixelCount[i] + " pixels");
-        }
-        
-        
+  
     }
     
     private boolean containsPixel(int[] xVal, int[] yVal, int [] zVal, int x, int y, int z){
@@ -569,12 +542,19 @@ public class MicroObject implements MicroObjectModel {
         return this.nThreshold;
     }
 
+    @Override
     public int[] getPixelsX() {
         return this.x;
     }
 
+    @Override
     public int[] getPixelsY() {
         return this.y;
+    }
+    
+    @Override
+    public int[] getPixelsZ() {
+        return this.z;
     }
 
 
@@ -586,6 +566,7 @@ public class MicroObject implements MicroObjectModel {
         return this.centroid_y;
     }
 
+    @Override
     public int getBoundCenterX() {
         return this.centerBoundX;
     }
@@ -779,7 +760,7 @@ public class MicroObject implements MicroObjectModel {
 
     @Override
     public int[] getYPixelsInRegion(int i) {
-                int[] al_y = new int[z.length];
+        int[] al_y = new int[z.length];
         int counter = 0;
         for(int j = 0; j < z.length; j++){
             if(z[j] == i){
@@ -795,6 +776,8 @@ public class MicroObject implements MicroObjectModel {
         //System.out.println("Y Region counter: " + counter + " size: " + export_y.length);
         return export_y;
     }
+    
+  
 
     @Override
     public int[] getBoundsCenter() {
