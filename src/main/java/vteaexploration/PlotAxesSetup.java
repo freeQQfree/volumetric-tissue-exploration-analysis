@@ -33,23 +33,19 @@ import java.sql.Connection;
 import java.util.HashMap;
 import java.util.ListIterator;
 import javax.swing.JButton;
-import vtea.lut.*;
+import static vtea._vtea.LUTMAP;
 import javax.swing.JComboBox;
 import org.jfree.chart.renderer.LookupPaintScale;
-import static vtea._vtea.LUTMAP;
-import static vtea._vtea.LUTOPTIONS;
-import vtea.exploration.plottools.panels.XYChartPanel;
 import vtea.jdbc.H2DatabaseEngine;
 import vtea.lut.AbstractLUT;
-import vteaexploration.LutCustomColorChooser;
 import vtea.exploration.listeners.CustomLutListener;
 
 /**
  *
  * @author sethwinfree
  */
-public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener, CustomLutListener {
-    
+public class PlotAxesSetup extends javax.swing.JFrame implements ActionListener, CustomLutListener {
+
     ArrayList<AxesChangeListener> AxesChangeListeners = new ArrayList();
     ArrayList<Component> ContentList = new ArrayList();
     ArrayList<Component> LUTList = new ArrayList();
@@ -58,7 +54,6 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
     String keySQLSafe = "";
     int explorerSelectedLutIndex = 0;
     HashMap<String, Color> customLutColors = new HashMap<String, Color>();
-    
 
     /**
      * Creates new form PlotAxesSetup
@@ -231,7 +226,7 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
     private void BlockSetupOKActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BlockSetupOKActionPerformed
         // TODO add your handling code here:
         this.setVisible(false);
-        
+
         HashMap<String, Color> customLutColors = this.customLutColors;
     }//GEN-LAST:event_BlockSetupOKActionPerformed
 
@@ -239,92 +234,97 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
         notifyAxesChangeListeners(ContentList, this.getPaintScale());
     }//GEN-LAST:event_PreviewButton1ActionPerformed
 
-    
-    private LookupPaintScale getPaintScale(){
-        
-        this.keySQLSafe = keySQLSafe;
-        this.availableDataHM = availableDataHM;
-        String lText = this.availableDataHM.get(2);
-        
+    private LookupPaintScale getPaintScale() {
+
+        //this.keySQLSafe = keySQLSafe;
+        //this.availableDataHM = availableDataHM;
+        String lText = availableDataHM.get(2);
+
         double max = Math.round(getMaximumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + keySQLSafe, lText), 0));
         double min = Math.round(getMinimumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + keySQLSafe, lText), 0));
         double range = max - min;
         if (max == 0) {
             max = 1;
         }
-        
-        LookupPaintScale ps = new LookupPaintScale(min, max+1, new Color(0x999999));
-        
-        //JComboBox lutTable = (JComboBox)LUTList.get(1);
-        JComboBox lutTable = (JComboBox)LUTList.get(2);
-        if((String)lutTable.getSelectedItem() == "Custom LUT"){
-            
-            for (int i = 0; i < customLutColors.size(); i++){
+
+        LookupPaintScale ps = new LookupPaintScale(min, max + 1, new Color(0x999999));
+
+        JComboBox lutTable = (JComboBox) LUTList.get(2);
+        if ((String) lutTable.getSelectedItem() == "Custom LUT") {
+
+            for (int i = 0; i < customLutColors.size(); i++) {
                 ps.add(i, customLutColors.get(i));
             }
-        
-    }else{
+
+        } else {
             try {
-            Class<?> c;
+                Class<?> c;
 
-            String str = (String)lutTable.getSelectedItem();
+                String str = (String) lutTable.getSelectedItem();
 
-            //System.out.println("PROFILING: The loaded lut is: " + str);
-            c = Class.forName(str);
-            Constructor<?> con;
-
-            Object iImp = new Object();
-
-            try {
-
-                con = c.getConstructor();
-                iImp = con.newInstance();
-
+                System.out.println("PROFILING: The minimum value is: " + min);
+                System.out.println("PROFILING: The maximum value is: " + max);
+                System.out.println("PROFILING: The LUT value is: " + lText);
                 
-        ps.add(min, ((AbstractLUT) iImp).getColor(0));      
-        ps.add(min + (1 * (range / 10)), ((AbstractLUT) iImp).getColor(10));
-        ps.add(min + (2 * (range / 10)), ((AbstractLUT) iImp).getColor(20));
-        ps.add(min + (3 * (range / 10)), ((AbstractLUT) iImp).getColor(30));
-        ps.add(min + (4 * (range / 10)), ((AbstractLUT) iImp).getColor(40));
-        ps.add(min + (5 * (range / 10)), ((AbstractLUT) iImp).getColor(50));
-        ps.add(min + (6 * (range / 10)), ((AbstractLUT) iImp).getColor(60));
-        ps.add(min + (7 * (range / 10)), ((AbstractLUT) iImp).getColor(70));
-        ps.add(min + (8 * (range / 10)), ((AbstractLUT) iImp).getColor(80));
-        ps.add(min + (9 * (range / 10)), ((AbstractLUT) iImp).getColor(90));
-        ps.add(max, ((AbstractLUT) iImp).getColor(100));
+                
+                
+                c = Class.forName(LUTMAP.get(lutTable.getSelectedItem().toString()));
+                
+                //c = Class.forName("BlueGray");
+                
+                Constructor<?> con;
+
+                Object iImp = new Object();
+
+                try {
+
+                    con = c.getConstructor();
+                    iImp = con.newInstance();
+
+                    ps.add(min, ((AbstractLUT) iImp).getColor(0));
+                    ps.add(min + (1 * (range / 10)), ((AbstractLUT) iImp).getColor(10));
+                    ps.add(min + (2 * (range / 10)), ((AbstractLUT) iImp).getColor(20));
+                    ps.add(min + (3 * (range / 10)), ((AbstractLUT) iImp).getColor(30));
+                    ps.add(min + (4 * (range / 10)), ((AbstractLUT) iImp).getColor(40));
+                    ps.add(min + (5 * (range / 10)), ((AbstractLUT) iImp).getColor(50));
+                    ps.add(min + (6 * (range / 10)), ((AbstractLUT) iImp).getColor(60));
+                    ps.add(min + (7 * (range / 10)), ((AbstractLUT) iImp).getColor(70));
+                    ps.add(min + (8 * (range / 10)), ((AbstractLUT) iImp).getColor(80));
+                    ps.add(min + (9 * (range / 10)), ((AbstractLUT) iImp).getColor(90));
+                    ps.add(max, ((AbstractLUT) iImp).getColor(100));
 
 //        
-            } catch (NullPointerException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                System.out.println("EXCEPTION: new instance decleration error... NPE etc.");
+                } catch (NullPointerException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                    System.out.println("EXCEPTION: new instance decleration error... NPE etc.");
+                }
+            } catch (NullPointerException | ClassNotFoundException ex) {
+                System.out.println("EXCEPTION in PlotAxesSetup: new class decleration error... Class not found.");
             }
-        } catch (NullPointerException | ClassNotFoundException ex) {
-            System.out.println("EXCEPTION: new class decleration error... Class not found.");
         }
-        }
-        
+
         return ps;
     }
-    
-    public void setAdjustable(boolean state){
+
+    public void setAdjustable(boolean state) {
         Content.setEnabled(state);
     }
-    
-    public ArrayList<Component> getSettings(){
+
+    public ArrayList<Component> getSettings() {
         ArrayList<Component> al = new ArrayList();
         return al;
     }
-    
-    public void setContent(ArrayList<Component> al){
-        
+
+    public void setContent(ArrayList<Component> al) {
+
         //Content = new JPanel();       
-        Content.setSize(new Dimension(350,350));
+        Content.setSize(new Dimension(350, 350));
         Content.setLayout(new GridBagLayout());
 
         Content.removeAll();
-        
+
         ContentList.clear();
         ContentList.addAll(al);
-        
+
         GridBagConstraints layoutConstraints = new GridBagConstraints();
 
         //MethodDetail
@@ -414,24 +414,23 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
 //            layoutConstraints.gridy = 1;
 //            Content.add((Component) al.get(7), layoutConstraints);
 //        }
-        
-        
+
         Content.setVisible(true);
-        
-        pack();   
+
+        pack();
     }
-    
-     public void setLUT(ArrayList<Component> al){
-        
+
+    public void setLUT(ArrayList<Component> al) {
+
         //Content = new JPanel();       
-        LUT.setSize(new Dimension(350,350));
+        LUT.setSize(new Dimension(350, 350));
         LUT.setLayout(new GridBagLayout());
 
         LUT.removeAll();
-        
+
         LUTList.clear();
         LUTList.addAll(al);
-        
+
         GridBagConstraints layoutConstraints = new GridBagConstraints();
 
         //MethodDetail
@@ -528,38 +527,37 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
 //            layoutConstraints.gridy = 1;
 //            Content.add((Component) al.get(7), layoutConstraints);
 //        }
-        
-        
+
         LUT.setVisible(true);
-        
+
         pack();
-        
-        ((JButton)al.get(1)).addActionListener(new java.awt.event.ActionListener() {
+
+        ((JButton) al.get(1)).addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButtonCustomLutActionPerformed(evt);
             }
         });
-        
-        ((JComboBox)al.get(2)).addActionListener(new java.awt.event.ActionListener() {
+
+        ((JComboBox) al.get(2)).addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jComboBoxLutActionPerformed(evt);
             }
         });
-        
-        ((JButton)LUT.getComponent(1)).setEnabled(FALSE);
+
+        ((JButton) LUT.getComponent(1)).setEnabled(FALSE);
     }
-    
-    public void addAxesChangeListener(AxesChangeListener listener){
+
+    public void addAxesChangeListener(AxesChangeListener listener) {
         AxesChangeListeners.add(listener);
     }
-    
+
     public void notifyAxesChangeListeners(ArrayList content, LookupPaintScale ps) {
         for (AxesChangeListener listener : AxesChangeListeners) {
             listener.onAxesSetting(content, ps);
         }
     }
-    
-    public void setDescriptor(String str){
+
+    public void setDescriptor(String str) {
         this.jLabel1.setText(str);
     }
     /**
@@ -612,29 +610,28 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        
+
         //JComboBox lutChoiceComboBox = (JComboBox)e.getSource();
         //Object selectedItem = lutChoiceComboBox.getSelectedItem();
         //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-    
-    private void jComboBoxLutActionPerformed(java.awt.event.ActionEvent evt){
-        
-        JComboBox lutChoiceComboBox = (JComboBox)evt.getSource();
+
+    private void jComboBoxLutActionPerformed(java.awt.event.ActionEvent evt) {
+
+        JComboBox lutChoiceComboBox = (JComboBox) evt.getSource();
         Object selectedItem = lutChoiceComboBox.getSelectedItem();
-        
-        if(selectedItem == "Custom LUT"){
-            ((JButton)LUT.getComponent(1)).setEnabled(TRUE);
-        }
-        else{
-            ((JButton)LUT.getComponent(1)).setEnabled(FALSE);
+
+        if (selectedItem == "Custom LUT") {
+            ((JButton) LUT.getComponent(1)).setEnabled(TRUE);
+        } else {
+            ((JButton) LUT.getComponent(1)).setEnabled(FALSE);
         }
     }
-    
-    private void jButtonCustomLutActionPerformed(java.awt.event.ActionEvent evt){
-        
+
+    private void jButtonCustomLutActionPerformed(java.awt.event.ActionEvent evt) {
+
         ArrayList<String> clusterInfo = new ArrayList<String>();
-        
+
         String lText = "";
         if (explorerSelectedLutIndex < 0) {
             lText = "";
@@ -647,26 +644,26 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
         if (max == 0) {
             max = 1;
         }
-        
-        for (int i=0; i <= range; i++){
+
+        for (int i = 0; i <= range; i++) {
             String clusterLabel = "Cluster_";
             String newClsuterLabel = clusterLabel.concat(String.valueOf(i));
             clusterInfo.add(newClsuterLabel);
         }
-        
+
         LutCustomColorChooser customLutChooser = new LutCustomColorChooser(clusterInfo);
         customLutChooser.invokeCustomLUTWindow();
-        
+
         customLutChooser.registerAxesSetup(this);
         //customLutChooser.getCustomLutColors(customLutColors);
-        
+
     }
-    
-    public void notifyAddFeatures(HashMap<Integer, String> availableDataHM, String keySQLSafe){
+
+    public void notifyAddFeatures(HashMap<Integer, String> availableDataHM, String keySQLSafe) {
         this.keySQLSafe = keySQLSafe;
         this.availableDataHM = availableDataHM;
         String lText = this.availableDataHM.get(2);
-        
+
         double max = Math.round(getMaximumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + keySQLSafe, lText), 0));
         double min = Math.round(getMinimumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + keySQLSafe, lText), 0));
         double range = max - min;
@@ -674,19 +671,18 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
             max = 1;
         }
     }
-    
+
     private double getMaximumOfData(ArrayList measurements, int l) {
 
         ListIterator<ArrayList> litr = measurements.listIterator();
-
 
         Number high = 0;
 
         while (litr.hasNext()) {
             try {
-                
+
                 ArrayList<Number> al = litr.next();
-              
+
                 if (al.get(l).floatValue() > high.floatValue()) {
                     high = al.get(l).floatValue();
                 }
@@ -715,17 +711,17 @@ public class PlotAxesSetup extends javax.swing.JFrame  implements ActionListener
         }
         return low.longValue();
     }
-    
-    public void shareConnection(Connection connection){
+
+    public void shareConnection(Connection connection) {
         this.connection = connection;
     }
-    
-    public void shareExplorerLutSelectedIndex(int selectedIndex){
+
+    public void shareExplorerLutSelectedIndex(int selectedIndex) {
         this.explorerSelectedLutIndex = selectedIndex;
     }
-    
+
     @Override
-    public void onCustomLutSelection(HashMap<String,Color> customLutColors){
+    public void onCustomLutSelection(HashMap<String, Color> customLutColors) {
         this.customLutColors = customLutColors;
     }
 }
