@@ -106,6 +106,9 @@ import vtea.spatial.distanceMaps2d;
 import vteaexploration.MicroExplorer;
 import vteaobjects.MicroObject;
 import vteaobjects.MicroObjectModel;
+import org.jfree.chart.renderer.LookupPaintScale;
+import vtea.lut.BlueGray;
+import vtea.lut.GroupLUT;
 
 /**
  *
@@ -123,7 +126,9 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
 
     private Connection connection;
     
+    private LookupPaintScale ps;
     
+    public XYExplorationPanel(){}
 
     public XYExplorationPanel(String key, Connection connection, ArrayList measurements, ArrayList<String> descriptions, HashMap<Integer, String> hm, ArrayList<MicroObject> objects) {
 
@@ -142,17 +147,44 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
 
         this.LUT = 0;
         this.hm = hm;
-        this.pointsize = MicroExplorer.POINTSIZE;
+        this.pointsize = MicroExplorer.POINTSIZESTART;
+        
+        setPaintScale();
         
         distanceMaps2D = new distanceMaps2d();
        
 
         //default plot 
-        addPlot(MicroExplorer.XSTART, MicroExplorer.YSTART, MicroExplorer.LUTSTART, MicroExplorer.POINTSIZE, 0, hm.get(1), hm.get(4), hm.get(2));
+        addPlot(MicroExplorer.XSTART, MicroExplorer.YSTART, MicroExplorer.LUTSTART, MicroExplorer.POINTSIZESTART, 0, hm.get(1), hm.get(4), hm.get(2));
+    }
+    
+    private void setPaintScale(){
+           double max = Math.round(getMaximumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + key.replace("-", "_"), hm.get(MicroExplorer.LUTSTART)), 0));
+            double min = Math.round(getMinimumOfData(H2DatabaseEngine.getColumn(vtea._vtea.H2_MEASUREMENTS_TABLE + "_" + key.replace("-", "_"), hm.get(MicroExplorer.LUTSTART)), 0));
+            double range = max - min;
+        if (max == 0) {
+            max = 1;
+            
+        }
+        
+        //LookupPaintScale ps = new LookupPaintScale();
+        
+       if(range <= 21){
+            
+        GroupLUT gpl = new GroupLUT();
+        
+        ps = gpl.getPaintScale(min, max);
+  
+        }else{
+            
+        BlueGray bg = new BlueGray();
+        
+        ps = bg.getPaintScale(min, max);
+        }
     }
 
-    private XYChartPanel createChartPanel(int x, int y, int l, String xText, String yText, String lText, int size, ImagePlus ip, boolean imageGate, Color imageGateOutline) {
-        return new XYChartPanel(objects, measurements, x, y, l, xText, yText, lText, size, ip, imageGate, new Color(0, 177, 76));
+    private XYChartPanel createChartPanel(int x, int y, int l, String xText, String yText, String lText, int size, ImagePlus ip, boolean imageGate, Color imageGateOutline, LookupPaintScale pss) {
+        return new XYChartPanel(objects, measurements, x, y, l, xText, yText, lText, size, ip, imageGate, new Color(0, 177, 76), ps);
     }
 
     private void startH2Database(String file, String table) {
@@ -512,7 +544,7 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
         pointsize = size;
         CenterPanel.removeAll();
 
-        cpd = new XYChartPanel(keySQLSafe, objects, x, y, l, xText, yText, lText, pointsize, impoverlay, imageGate, imageGateColor);
+        cpd = new XYChartPanel(keySQLSafe, objects, x, y, l, xText, yText, lText, pointsize, impoverlay, imageGate, imageGateColor, ps);
 
         cpd.addUpdatePlotWindowListener(this);
 
@@ -561,43 +593,44 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
         }
 
         //setup LUTs
-        try {
-            Class<?> c;
-
-            String str = LUTMAP.get(LUTOPTIONS[this.LUT]);
-
-            //System.out.println("PROFILING: The loaded lut is: " + str);
-            c = Class.forName(str);
-            Constructor<?> con;
-
-            Object iImp = new Object();
-
-            try {
-
-                con = c.getConstructor();
-                iImp = con.newInstance();
-
-                HashMap lutTable = ((AbstractLUT) iImp).getLUTMAP();
-                
-                XYChartPanel.ZEROPERCENT = ((AbstractLUT) iImp).getColor(0);
-                XYChartPanel.TENPERCENT = ((AbstractLUT) iImp).getColor(10);
-                XYChartPanel.TWENTYPERCENT = ((AbstractLUT) iImp).getColor(20);
-                XYChartPanel.THIRTYPERCENT = ((AbstractLUT) iImp).getColor(30);
-                XYChartPanel.FORTYPERCENT = ((AbstractLUT) iImp).getColor(40);
-                XYChartPanel.FIFTYPERCENT = ((AbstractLUT) iImp).getColor(50);
-                XYChartPanel.SIXTYPERCENT = ((AbstractLUT) iImp).getColor(60);
-                XYChartPanel.SEVENTYPERCENT = ((AbstractLUT) iImp).getColor(70);
-                XYChartPanel.EIGHTYPERCENT = ((AbstractLUT) iImp).getColor(80);
-                XYChartPanel.NINETYPERCENT = ((AbstractLUT) iImp).getColor(90);
-                XYChartPanel.ALLPERCENT = ((AbstractLUT) iImp).getColor(100);
-
-//        
-            } catch (NullPointerException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
-                System.out.println("EXCEPTION: new instance decleration error... NPE etc.");
-            }
-        } catch (NullPointerException | ClassNotFoundException ex) {
-            System.out.println("EXCEPTION: new class decleration error... Class not found.");
-        }
+        XYChartPanel.PS = this.ps;
+//        try {
+//            Class<?> c;
+//
+//            String str = LUTMAP.get(LUTOPTIONS[this.LUT]);
+//
+//            //System.out.println("PROFILING: The loaded lut is: " + str);
+//            c = Class.forName(str);
+//            Constructor<?> con;
+//
+//            Object iImp = new Object();
+//
+//            try {
+//
+//                con = c.getConstructor();
+//                iImp = con.newInstance();
+//
+//                HashMap lutTable = ((AbstractLUT) iImp).getLUTMAP();
+//                
+//                XYChartPanel.ZEROPERCENT = ((AbstractLUT) iImp).getColor(0);
+//                XYChartPanel.TENPERCENT = ((AbstractLUT) iImp).getColor(10);
+//                XYChartPanel.TWENTYPERCENT = ((AbstractLUT) iImp).getColor(20);
+//                XYChartPanel.THIRTYPERCENT = ((AbstractLUT) iImp).getColor(30);
+//                XYChartPanel.FORTYPERCENT = ((AbstractLUT) iImp).getColor(40);
+//                XYChartPanel.FIFTYPERCENT = ((AbstractLUT) iImp).getColor(50);
+//                XYChartPanel.SIXTYPERCENT = ((AbstractLUT) iImp).getColor(60);
+//                XYChartPanel.SEVENTYPERCENT = ((AbstractLUT) iImp).getColor(70);
+//                XYChartPanel.EIGHTYPERCENT = ((AbstractLUT) iImp).getColor(80);
+//                XYChartPanel.NINETYPERCENT = ((AbstractLUT) iImp).getColor(90);
+//                XYChartPanel.ALLPERCENT = ((AbstractLUT) iImp).getColor(100);
+//
+////        
+//            } catch (NullPointerException | NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+//                System.out.println("EXCEPTION: new instance decleration error... NPE etc.");
+//            }
+//        } catch (NullPointerException | ClassNotFoundException ex) {
+//            System.out.println("EXCEPTION: new class decleration error... Class not found.");
+//        }
 
         //setup chart layer
         CenterPanel.setOpaque(false);
@@ -725,7 +758,7 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
                 }
             }
         }
-        return createChartPanel(x, y, l, xText, yText, lText, pointsize, impoverlay, imageGate, imageGateColor);
+        return createChartPanel(x, y, l, xText, yText, lText, pointsize, impoverlay, imageGate, imageGateColor, ps);
     }
 
     @Override
@@ -1037,12 +1070,12 @@ public class XYExplorationPanel extends AbstractExplorationPanel implements  Dis
     }
 
     @Override
-    public void setAxesTo(ArrayList al, boolean x, boolean y, int lutTable) {
+    public void setAxesTo(ArrayList al, boolean x, boolean y, LookupPaintScale ps) {
         AxesLimits = al;
         xScaleLinear = x;
         yScaleLinear = y;
-        LUT = lutTable;
         useCustom = true;
+        this.ps = ps;
     }
 
     @Override

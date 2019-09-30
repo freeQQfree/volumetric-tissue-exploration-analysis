@@ -20,6 +20,7 @@ package vtea.lut;
 import java.awt.Color;
 import java.util.HashMap;
 import vtea.VTEAModule;
+import org.jfree.chart.renderer.LookupPaintScale;
 
 /**
  *
@@ -30,5 +31,7 @@ public interface LUT extends VTEAModule{
     public HashMap getLUTMAP();
     
     public Color getColor(int i);
+    
+    public LookupPaintScale getPaintScale(double min, double max);
     
 }

@@ -85,6 +85,9 @@ import vtea.feature.FeatureFrame;
 import vtea.measurement.MeasurementFrame;
 import vtea.processor.ExplorerProcessor;
 import vtea.protocol.setup.SegmentationPreviewer;
+import javax.swing.JButton;
+import java.sql.Connection;
+import org.jfree.chart.renderer.LookupPaintScale;
 
 /**
  *
@@ -109,7 +112,7 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
     public static final int YSTART = 1;
     public static final int LUTSTART = 1;
 
-    public static final int POINTSIZE = 4;
+    public static final int POINTSIZESTART = 4;
 
 
     int featureCount = 0;
@@ -169,6 +172,8 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
     public JMenuExploration ObjectMenu;
     public JMenuExploration WorkflowMenu;
     
+    private Connection connection;
+    String keySQLSafe = "";
  
 
     /**
@@ -188,6 +193,7 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
         //imp is the original image
         
         this.key = key;
+        this.keySQLSafe = key.replace("-", "_");
         
         this.descriptions = AvailableData;
         this.descriptionsLabels = descriptionLabel;
@@ -357,7 +363,8 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
         mf = new MeasurementFrame(descriptions, aep.getObjects(), imp);
         mf.addListener(this);
        
-
+        // Notify added features to axes settings dialog box to share cluster information for CustomLUT
+        this.AxesSetup.notifyAddFeatures(AvailableDataHM, this.keySQLSafe);
     }
 
     /**
@@ -915,6 +922,7 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
     private void jComboBoxLUTPlotActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxLUTPlotActionPerformed
         //ec.setCustomRange(false);
         onPlotChangeRequest(jComboBoxXaxis.getSelectedIndex(), jComboBoxYaxis.getSelectedIndex(), jComboBoxLUTPlot.getSelectedIndex(), jComboBoxPointSize.getSelectedIndex(), imageGate);
+        AxesSetup.shareExplorerLutSelectedIndex(this.jComboBoxLUTPlot.getSelectedIndex());
     }//GEN-LAST:event_jComboBoxLUTPlotActionPerformed
 
     private void jComboBoxPointSizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxPointSizeActionPerformed
@@ -983,6 +991,9 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
         ArrayList<Component> al = new ArrayList<Component>();
         
         al.add(new JLabel("Graph LUT:"));
+        JButton editCustomLut = new JButton();
+        editCustomLut.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icons/edit-4_small.png")));
+        al.add(editCustomLut);
         al.add(new JComboBox(vtea._vtea.LUTOPTIONS));
 
         AxesSetup.setLUT(al);
@@ -1466,7 +1477,7 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
     }
 
     @Override
-    public void onAxesSetting(ArrayList Content, ArrayList LUT) {
+    public void onAxesSetting(ArrayList Content, LookupPaintScale ps) {
 
         ArrayList<Double> limits = new ArrayList();
 
@@ -1485,9 +1496,9 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
             yLinear = false;
         }
         
-        JComboBox lutTable = (JComboBox)LUT.get(1);
+        //JComboBox lutTable = (JComboBox)LUT.get(1);
 
-        ec.setAxesTo(limits, xLinear, yLinear,lutTable.getSelectedIndex());
+        ec.setAxesTo(limits, xLinear, yLinear, ps);
 
         updatePlotByPopUpMenu(this.jComboBoxXaxis.getSelectedIndex(), this.jComboBoxYaxis.getSelectedIndex(), this.jComboBoxLUTPlot.getSelectedIndex(), jComboBoxPointSize.getSelectedIndex());
     }
@@ -1738,6 +1749,9 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
         //rebuild FeatureFrame columns
         makeDataTable();
         ff.updateColumns(ObjectIDs, descriptions);
+        
+        // Notify added features to axes settings dialog box to share cluster information for CustomLUT
+        this.AxesSetup.notifyAddFeatures(AvailableDataHM, this.keySQLSafe);
     }
 
     @Override
@@ -2058,6 +2072,15 @@ public class MicroExplorer extends javax.swing.JFrame implements FeatureMapListe
 
         }
 
+    }
+    
+    public void shareConnection(Connection connection){
+        this.connection = connection;
+        AxesSetup.shareConnection(connection);
+    }
+    
+    public void getLutComboBoxSelectedIndex(int selectedIndex){
+        selectedIndex = this.jComboBoxLUTPlot.getSelectedIndex();
     }
 
 }

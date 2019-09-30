@@ -18,11 +18,12 @@
 package vtea.exploration.listeners;
 
 import java.util.ArrayList;
+import org.jfree.chart.renderer.LookupPaintScale;
 
 /**
  *
  * @author sethwinfree
  */
 public interface AxesChangeListener {
-    public void onAxesSetting(ArrayList al, ArrayList al1);
+    public void onAxesSetting(ArrayList al, LookupPaintScale ps);
 }

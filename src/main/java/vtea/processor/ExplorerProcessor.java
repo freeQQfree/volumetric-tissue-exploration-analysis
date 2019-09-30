@@ -27,6 +27,11 @@ import vtea.exploration.plottools.panels.DefaultPlotPanels;
 import vtea.exploration.plottools.panels.XYExplorationPanel;
 import vtea.jdbc.H2DatabaseEngine;
 import vteaexploration.MicroExplorer;
+import java.awt.Color;
+import java.util.ListIterator;
+import org.jfree.chart.renderer.LookupPaintScale;
+import vtea.lut.BlueGray;
+import vtea.lut.GroupLUT;
 
 /**
  *
@@ -109,6 +114,7 @@ public class ExplorerProcessor extends AbstractProcessor {
 //            explorer.setTitle(explorer.getTitle().replace(".tif", ""));
 //            explorer.setTitle(explorer.getTitle().concat("_" + title));
             explorer.setTitle(title);
+            explorer.shareConnection(connection);
             explorer.process(key, impOriginal, title, measurements, XY, DPP, descriptions, descriptionLabels);
 
             setProgress(100);
@@ -130,7 +136,46 @@ public class ExplorerProcessor extends AbstractProcessor {
     public String getChange() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+    
+    private double getMaximumOfData(ArrayList measurements, int l) {
+
+        ListIterator<ArrayList> litr = measurements.listIterator();
 
 
+        Number high = 0;
+
+        while (litr.hasNext()) {
+            try {
+                
+                ArrayList<Number> al = litr.next();
+              
+                if (al.get(l).floatValue() > high.floatValue()) {
+                    high = al.get(l).floatValue();
+                }
+            } catch (NullPointerException e) {
+            }
+        }
+        return high.longValue();
+
+    }
+
+    private double getMinimumOfData(ArrayList measurements, int l) {
+
+        ListIterator<ArrayList> litr = measurements.listIterator();
+
+        //ArrayList<Number> al = new ArrayList<Number>();
+        Number low = getMaximumOfData(measurements, l);
+
+        while (litr.hasNext()) {
+            try {
+                ArrayList<Number> al = litr.next();
+                if (al.get(l).floatValue() < low.floatValue()) {
+                    low = al.get(l).floatValue();
+                }
+            } catch (NullPointerException e) {
+            }
+        }
+        return low.longValue();
+    }
 
 }
